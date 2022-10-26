@@ -3,8 +3,9 @@ package validators
 import (
 	"testing"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/go-playground/assert/v2"
+
+	"github.com/firmys/validator"
 )
 
 type test struct {

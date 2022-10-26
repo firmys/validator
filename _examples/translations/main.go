@@ -5,8 +5,9 @@ import (
 
 	"github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
-	"github.com/go-playground/validator/v10"
-	en_translations "github.com/go-playground/validator/v10/translations/en"
+
+	"github.com/firmys/validator"
+	en_translations "github.com/firmys/validator/translations/en"
 )
 
 // User contains user information
