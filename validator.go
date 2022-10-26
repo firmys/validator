@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"unsafe"
 )
 
 // per validate construct
@@ -92,11 +93,22 @@ func (v *validate) validateStruct(ctx context.Context, parent reflect.Value, cur
 	}
 }
 
+func GetUnexportedStruct(field reflect.Value) reflect.Value {
+	if !field.CanAddr() {
+		return field
+	}
+	if field.Kind() == reflect.Ptr && !field.IsNil() {
+		field = field.Elem()
+	}
+	return reflect.NewAt(field.Type(), unsafe.Pointer(field.UnsafeAddr())).Elem()
+}
+
 // traverseField validates any field, be it a struct or single field, ensures it's validity and passes it along to be validated via it's tag options
 func (v *validate) traverseField(ctx context.Context, parent reflect.Value, current reflect.Value, ns []byte, structNs []byte, cf *cField, ct *cTag) {
 	var typ reflect.Type
 	var kind reflect.Kind
 
+	current = GetUnexportedStruct(current)
 	current, kind, v.fldIsPointer = v.extractTypeInternal(current, false)
 
 	switch kind {
