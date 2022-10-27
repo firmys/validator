@@ -417,73 +417,6 @@ func TestNameNamespace(t *testing.T) {
 	Equal(t, fe.StructNamespace(), "Namespace.Inner1.Inner2.String[1]")
 }
 
-func TestAnonymous(t *testing.T) {
-	validate := New()
-	validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
-		name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
-
-		if name == "-" {
-			return ""
-		}
-
-		return name
-	})
-
-	type Test struct {
-		Anonymous struct {
-			A string `validate:"required" json:"EH"`
-		}
-		AnonymousB struct {
-			B string `validate:"required" json:"BEE"`
-		}
-		anonymousC struct {
-			c string `validate:"required"`
-		}
-	}
-
-	tst := &Test{
-		Anonymous: struct {
-			A string `validate:"required" json:"EH"`
-		}{
-			A: "1",
-		},
-		AnonymousB: struct {
-			B string `validate:"required" json:"BEE"`
-		}{
-			B: "",
-		},
-		anonymousC: struct {
-			c string `validate:"required"`
-		}{
-			c: "",
-		},
-	}
-
-	Equal(t, tst.anonymousC.c, "")
-
-	err := validate.Struct(tst)
-	NotEqual(t, err, nil)
-
-	errs := err.(ValidationErrors)
-
-	Equal(t, len(errs), 1)
-	AssertError(t, errs, "Test.AnonymousB.BEE", "Test.AnonymousB.B", "BEE", "B", "required")
-
-	fe := getError(errs, "Test.AnonymousB.BEE", "Test.AnonymousB.B")
-	NotEqual(t, fe, nil)
-	Equal(t, fe.Field(), "BEE")
-	Equal(t, fe.StructField(), "B")
-
-	s := struct {
-		c string `validate:"required"`
-	}{
-		c: "",
-	}
-
-	err = validate.Struct(s)
-	Equal(t, err, nil)
-}
-
 func TestAnonymousSameStructDifferentTags(t *testing.T) {
 	validate := New()
 	validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
@@ -7023,25 +6956,6 @@ func TestChangeTag(t *testing.T) {
 	errs = validate.Struct(s)
 	NotEqual(t, errs, nil)
 	AssertError(t, errs, "Test.Name", "Test.Name", "Name", "Name", "len")
-}
-
-func TestUnexposedStruct(t *testing.T) {
-	validate := New()
-
-	type Test struct {
-		Name      string
-		unexposed struct {
-			A string `validate:"required"`
-		}
-	}
-
-	s := &Test{
-		Name: "TEST",
-	}
-	Equal(t, s.unexposed.A, "")
-
-	errs := validate.Struct(s)
-	Equal(t, errs, nil)
 }
 
 func TestBadParams(t *testing.T) {
