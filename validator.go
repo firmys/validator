@@ -5,15 +5,14 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
-	"unicode"
+	//"unicode"
 	"unsafe"
 )
 
 // per validate construct
 type validate struct {
 	v              *Validate
-	counter        map[string]int
-	csNames        []string
+	depth          int
 	top            reflect.Value
 	ns             []byte
 	actualNs       []byte
@@ -36,6 +35,11 @@ type validate struct {
 // parent and current will be the same the first run of validateStruct
 func (v *validate) validateStruct(ctx context.Context, parent reflect.Value, current reflect.Value, typ reflect.Type, ns []byte, structNs []byte, ct *cTag) {
 
+	v.depth++
+	if v.depth > 15 {
+		return
+	}
+
 	cs, ok := v.v.structCache.Get(typ)
 	if !ok {
 		cs = v.v.extractStructCache(current, typ.Name())
@@ -48,16 +52,6 @@ func (v *validate) validateStruct(ctx context.Context, parent reflect.Value, cur
 
 		structNs = append(structNs, cs.name...)
 		structNs = append(structNs, '.')
-	}
-	v.csNames = append(v.csNames, cs.name)
-	for _, str := range v.csNames {
-		if v.counter[str] > 3 && unicode.IsLower([]rune(cs.name)[0]) {
-			return
-		}
-		if str == cs.name {
-			v.counter[str]++
-		}
-
 	}
 
 	// ct is nil on top level struct, and structs as fields that have no tag info
@@ -90,6 +84,7 @@ func (v *validate) validateStruct(ctx context.Context, parent reflect.Value, cur
 
 			v.traverseField(ctx, current, current.Field(f.idx), ns, structNs, f, f.cTags)
 		}
+		v.depth--
 	}
 
 	// check if any struct level validations, after all field validations already checked.

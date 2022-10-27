@@ -190,14 +190,14 @@ func (v *Validate) ValidateMap(data map[string]interface{}, rules map[string]int
 //
 // eg. to use the names which have been specified for JSON representations of structs, rather than normal Go field names:
 //
-//    validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
-//        name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
-//        // skip if tag key says it should be ignored
-//        if name == "-" {
-//            return ""
-//        }
-//        return name
-//    })
+//	validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
+//	    name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
+//	    // skip if tag key says it should be ignored
+//	    if name == "-" {
+//	        return ""
+//	    }
+//	    return name
+//	})
 func (v *Validate) RegisterTagNameFunc(fn TagNameFunc) {
 	v.tagNameFunc = fn
 	v.hasTagNameFunc = true
@@ -380,6 +380,7 @@ func (v *Validate) StructCtx(ctx context.Context, s interface{}) (err error) {
 	vd := v.pool.Get().(*validate)
 	vd.top = top
 	vd.isPartial = false
+	vd.depth = 0
 	// vd.hasExcludes = false // only need to reset in StructPartial and StructExcept
 
 	vd.validateStruct(ctx, top, val, val.Type(), vd.ns[0:0], vd.actualNs[0:0], nil)
