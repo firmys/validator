@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"unicode"
 	"unsafe"
 )
 
 // per validate construct
 type validate struct {
 	v              *Validate
+	counter        map[string]int
+	csNames        []string
 	top            reflect.Value
 	ns             []byte
 	actualNs       []byte
@@ -45,6 +48,16 @@ func (v *validate) validateStruct(ctx context.Context, parent reflect.Value, cur
 
 		structNs = append(structNs, cs.name...)
 		structNs = append(structNs, '.')
+	}
+	v.csNames = append(v.csNames, cs.name)
+	for _, str := range v.csNames {
+		if v.counter[str] > 3 && unicode.IsLower([]rune(cs.name)[0]) {
+			return
+		}
+		if str == cs.name {
+			v.counter[str]++
+		}
+
 	}
 
 	// ct is nil on top level struct, and structs as fields that have no tag info
